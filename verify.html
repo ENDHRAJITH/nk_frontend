@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify & Download – NKCOMMERCEBOOKS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1208;
+      --gold: #c9900c;
+      --gold-light: #f5e6b8;
+      --cream: #faf6ee;
+      --warm-gray: #8a7f6e;
+      --paper: #fff9f0;
+      --border: #e8dcc8;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--ink);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3rem 2.5rem;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      margin-bottom: 2rem;
+      display: block;
+    }
+
+    /* States */
+    .state { display: none; }
+    .state.active { display: block; }
+
+    /* Loading */
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success */
+    .check-circle {
+      width: 64px; height: 64px;
+      background: #edf7ed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 1.8rem;
+    }
+    /* Error */
+    .error-circle {
+      width: 64px; height: 64px;
+      background: #fdf0f0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 1.8rem;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      margin-bottom: 0.6rem;
+    }
+    p {
+      color: var(--warm-gray);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-download {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--ink);
+      text-decoration: none;
+      padding: 0.85rem 2rem;
+      border-radius: 3px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-download:hover { background: #e0a010; }
+    .btn-download:active { transform: scale(0.98); }
+
+    .btn-outline {
+      display: inline-block;
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: 0.7rem 1.5rem;
+      border-radius: 3px;
+      font-size: 0.88rem;
+      text-decoration: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-outline:hover { background: var(--gold-light); }
+
+    .user-name {
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .already-badge {
+      display: inline-block;
+      background: #fdf6e3;
+      color: #9a7020;
+      border: 1px solid #e8d49a;
+      border-radius: 3px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <span class="logo">NKCOMMERCEBOOKS</span>
+
+    <!-- State 1: Loading -->
+    <div class="state active" id="stateLoading">
+      <div class="spinner"></div>
+      <h2>Verifying…</h2>
+      <p>Please wait while we verify your email.</p>
+    </div>
+
+    <!-- State 2: Success (first time) -->
+    <div class="state" id="stateSuccess">
+      <div class="check-circle">✓</div>
+      <h2>You're Verified!</h2>
+      <p>Welcome, <span class="user-name" id="userName"></span>!<br/>Your download is ready.</p>
+      <button class="btn-download" onclick="triggerDownload()">
+        ⬇ Download Free Notes
+      </button>
+    </div>
+
+    <!-- State 3: Already verified -->
+    <div class="state" id="stateAlready">
+      <div class="check-circle">📚</div>
+      <div class="already-badge">Already Verified</div>
+      <h2>Welcome Back!</h2>
+      <p>Hey <span class="user-name" id="userNameAlt"></span>, your link is still active. Download your notes below.</p>
+      <button class="btn-download" onclick="triggerDownload()">
+        ⬇ Download Again
+      </button>
+    </div>
+
+    <!-- State 4: Error -->
+    <div class="state" id="stateError">
+      <div class="error-circle">✗</div>
+      <h2 id="errorTitle">Link Expired</h2>
+      <p id="errorMsg">This verification link has expired or is invalid. Please request a new one.</p>
+      <a href="/" class="btn-outline">← Request New Link</a>
+    </div>
+
+  </div>
+
+  <script>
+    // ── CONFIG ──────────────────────────────────────────
+    const BACKEND_URL = 'https://your-backend.onrender.com';
+    // ────────────────────────────────────────────────────
+
+    // PDF/file download URL — your Supabase Storage public URL or direct link
+    let downloadUrl = '';
+
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const token  = params.get('token');
+
+      if (!token) {
+        showError('Invalid Link', 'No token found in this link. Please request a new download link.');
+        return;
+      }
+
+      try {
+        const res  = await fetch(`${BACKEND_URL}/api/verify/${token}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showError(
+            data.expired ? 'Link Expired' : 'Invalid Link',
+            data.message || 'This link is invalid or has expired.'
+          );
+          return;
+        }
+
+        // Store download URL from backend
+        downloadUrl = data.downloadUrl || '';
+
+        if (data.alreadyVerified) {
+          document.getElementById('userNameAlt').textContent = data.name || 'there';
+          showState('stateAlready');
+        } else {
+          document.getElementById('userName').textContent = data.name || 'there';
+          showState('stateSuccess');
+        }
+
+      } catch (err) {
+        showError('Network Error', 'Could not reach the server. Please try again.');
+      }
+    }
+
+    function triggerDownload() {
+      if (!downloadUrl) {
+        alert('Download URL not available. Please contact support.');
+        return;
+      }
+      // Log download then open file
+      fetch(`${BACKEND_URL}/api/log-download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: new URLSearchParams(window.location.search).get('token') })
+      }).catch(() => {}); // fire-and-forget
+
+      window.open(downloadUrl, '_blank');
+    }
+
+    function showState(id) {
+      document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showError(title, msg) {
+      document.getElementById('errorTitle').textContent = title;
+      document.getElementById('errorMsg').textContent   = msg;
+      showState('stateError');
+    }
+
+    init();
+  </script>
+</body>
+</html>
